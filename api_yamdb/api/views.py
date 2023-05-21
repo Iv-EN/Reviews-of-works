@@ -1,10 +1,19 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
+from .filters import FilterTitle
+from .mixins import MixinsListCreateDestroyViewsSet
 
+from .permissions import IsAdminOrReadOnly
+from api.models import Category, Genre, Title
 from reviews.models import Comment, Review
-from .serializers import (ReviewSerializer,
-                          CommentSerializer)
+from .serializers import (CategorySerializer,
+                          CommentSerializer,
+                          GenreSerializer,
+                          TitleEditSerializer,
+                          TitlesReadOnlySerializer
+                          ReviewSerializer)
 
 
 def redoc(request):
@@ -39,3 +48,33 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_queryset = Review.objects.filter(title=title_id)
         return review_queryset
+
+
+class CategoryViewSet(MixinsListCreateDestroyViewsSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewsSet(MixinsListCreateDestroyViewsSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FilterTitle
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PATCH']:
+            return TitleEditSerializer
+        return TitlesReadOnlySerializer
