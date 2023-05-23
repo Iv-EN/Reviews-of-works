@@ -2,18 +2,14 @@ from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.permissions import ListOrAdminModeratOnly
+
 from .filters import FilterTitle
 from .mixins import MixinsListCreateDestroyViewsSet
-
-from .permissions import IsAdminOrReadOnly
-from api.models import Category, Genre, Title
-from reviews.models import Comment, Review
-from .serializers import (CategorySerializer,
-                          CommentSerializer,
-                          GenreSerializer,
-                          TitleEditSerializer,
-                          TitlesReadOnlySerializer
-                          ReviewSerializer)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
+                          TitleEditSerializer, TitlesReadOnlySerializer)
 
 
 def redoc(request):
@@ -53,7 +49,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(MixinsListCreateDestroyViewsSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -62,7 +58,7 @@ class CategoryViewSet(MixinsListCreateDestroyViewsSet):
 class GenreViewsSet(MixinsListCreateDestroyViewsSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -70,7 +66,7 @@ class GenreViewsSet(MixinsListCreateDestroyViewsSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 
