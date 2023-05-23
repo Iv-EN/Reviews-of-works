@@ -12,7 +12,7 @@ from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
                           TitleEditSerializer,
-                          TitlesReadOnlySerializer
+                          TitlesReadOnlySerializer,
                           ReviewSerializer)
 
 
