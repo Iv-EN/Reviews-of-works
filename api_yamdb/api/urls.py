@@ -8,7 +8,6 @@ from api.views import (CategoryViewSet,
                        TitleViewSet,
                        ReviewViewSet)
 
-
 router_v1 = routers.DefaultRouter()
 
 router_v1.register(

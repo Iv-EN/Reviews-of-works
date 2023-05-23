@@ -76,6 +76,7 @@ class Title(models.Model):
         ordering = ['name']
 
 
+
 class Review(models.Model):
     title = models.ForeignKey(
         to=Title,
