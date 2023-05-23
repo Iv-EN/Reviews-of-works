@@ -4,10 +4,9 @@ from rest_framework import routers
 from . import views
 from api.views import (CategoryViewSet,
                        CommentViewSet,
-                       GenreViewsSet, 
+                       GenreViewsSet,
                        TitleViewSet,
                        ReviewViewSet)
-                       
 
 router_v1 = routers.DefaultRouter()
 
