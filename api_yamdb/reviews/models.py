@@ -76,7 +76,6 @@ class Title(models.Model):
         ordering = ['name']
 
 
-
 class Review(models.Model):
     title = models.ForeignKey(
         to=Title,
@@ -106,6 +105,13 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
+        ordering = ['pub_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            ),
+        ]
 
     def __str__(self):
         return f'{self.author.username}: {self.text}'
