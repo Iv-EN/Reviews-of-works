@@ -10,8 +10,9 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django_filters import rest_framework as filters
 
-from .permissions import AdminAndSuperuserOnly
+from .permissions import AdminAndSuperuserOnly, ListOrAdminModeratOnly
 from .serializer import UserCreateSerializer, UserSerializer
 
 User = get_user_model()
@@ -74,15 +75,18 @@ def create_token(request):
 class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     queryset = User.objects.all()
-    permission_classes = [AdminAndSuperuserOnly]
+    permission_classes = (AdminAndSuperuserOnly,)
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
         detail=False,
         methods=['get', 'patch'],
         url_path='me',
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated, ]
     )
     def me_profile(self, request, pk=None):
         username = request.user.username
@@ -96,6 +100,7 @@ class UserViewSet(viewsets.ModelViewSet):
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
         serializer = UserSerializer(user)
-        return Response(serializer.data)
+        return Response(serializer.data)   
 
-        
+
+
