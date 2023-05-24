@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django_filters import rest_framework as filters
 
-from .permissions import AdminAndSuperuserOnly, ListOrAdminModeratOnly
+from .permissions import AdminAndSuperuserOnly
 from .serializer import UserCreateSerializer, UserSerializer
 
 User = get_user_model()
@@ -102,5 +102,17 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(user)
         return Response(serializer.data)   
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
+        search_username = request.query_params.get('search')
+        if search_username:
+            queryset = queryset.filter(username=search_username)
 
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
