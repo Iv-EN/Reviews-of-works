@@ -22,8 +22,10 @@ User = get_user_model()
 def create_user(request):
     email = request.data.get('email')
     username = request.data.get('username')
-    if (User.objects.filter(email=email).exists() and
-            User.objects.filter(username=username).exists()):
+    if (User.objects.filter(
+        email=email).exists()
+        and User.objects.filter(
+            username=username).exists()):
         return Response(status=status.HTTP_200_OK)
     serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -100,7 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
         serializer = UserSerializer(user)
-        return Response(serializer.data)   
+        return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
