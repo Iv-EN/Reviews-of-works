@@ -19,6 +19,11 @@ User = get_user_model()
 
 @api_view(['POST'])
 def create_user(request):
+    email = request.data.get('email')
+    username = request.data.get('username')
+    if (User.objects.filter(email=email).exists() and
+            User.objects.filter(username=username).exists()):
+        return Response(status=status.HTTP_200_OK)
     serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -82,15 +87,15 @@ class UserViewSet(viewsets.ModelViewSet):
     def me_profile(self, request, pk=None):
         username = request.user.username
         user = User.objects.get(username=username)
-
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 user, data=request.data,
                 partial=True,
                 context={'request': request}
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+        
