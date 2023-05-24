@@ -21,7 +21,7 @@ def redoc(request):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly,]
+    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -39,7 +39,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly,]
+    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
