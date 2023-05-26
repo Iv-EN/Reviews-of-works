@@ -114,7 +114,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.author.username}: {self.text}'
+        return f'{self.author.username}: {self.text[:15]}'
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -150,4 +150,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return f'{self.author.username}: {self.text}'
+        return f'{self.author.username}: {self.text[:15]}'
