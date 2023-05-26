@@ -24,7 +24,7 @@ class GenreCategoryBaseClass(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['name']
+        ordering = ('name',)
 
 
 class Category(GenreCategoryBaseClass):
@@ -73,7 +73,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-        ordering = ['name']
+        ordering = ('name',)
 
 
 class Review(models.Model):
@@ -105,7 +105,7 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
-        ordering = ['pub_date']
+        ordering = ('pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
