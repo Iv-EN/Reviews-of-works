@@ -76,36 +76,48 @@ class Title(models.Model):
         ordering = ('name',)
 
 
-class Review(models.Model):
-    title = models.ForeignKey(
-        to=Title,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Произведение'
+class ReviewCommentBaseClass(models.Model):
+    pub_date = models.DateTimeField(
+        verbose_name='Время добавления',
+        auto_now_add=True,
+        null= True
     )
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reviews',
+        #related_name='reviews',
         verbose_name='Автор'
     )
+
+    def __str__(self):
+        return f'{self.author.username}: {self.text[:15]}'
+
+    class Meta:
+        abstract = True
+        ordering = ('pub_date',)
+
+
+class Review(ReviewCommentBaseClass):
+    title = models.ForeignKey(
+        to=Title,
+        on_delete=models.CASCADE,
+        #related_name='reviews',
+        verbose_name='Произведение'
+    )
     score = models.SmallIntegerField(
+        default=1,
         validators=[
             MinValueValidator(0),
             MaxValueValidator(10),
         ],
         verbose_name='Оценка',
     )
-    pub_date = models.DateTimeField(
-        verbose_name='Время добавления',
-        auto_now_add=True
-    )
 
     class Meta:
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
-        ordering = ('pub_date',)
+        default_related_name='review'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -113,41 +125,26 @@ class Review(models.Model):
             ),
         ]
 
-    def __str__(self):
-        return f'{self.author.username}: {self.text[:15]}'
 
-    def save(self, *args, **kwargs):
+"""     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         title = self.title
         rating = Review.objects.filter(title=title).aggregate(
             average=models.Avg('score'))
         if rating['average']:
-            title.rating = int(rating['average'])
-        title.save()
+            rating = int(rating['average'])
+        title.save() """
 
 
-class Comment(models.Model):
-    text = models.TextField(verbose_name='Текст')
-    author = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name='Автор'
-    )
+class Comment(ReviewCommentBaseClass):
     review = models.ForeignKey(
         to=Review,
         on_delete=models.CASCADE,
-        related_name='comments',
+        #related_name='comments',
         verbose_name='Ревью'
-    )
-    pub_date = models.DateTimeField(
-        verbose_name='Время добавления',
-        auto_now_add=True
     )
 
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-
-    def __str__(self):
-        return f'{self.author.username}: {self.text[:15]}'
+        default_related_name='comments'
