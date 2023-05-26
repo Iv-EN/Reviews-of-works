@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -11,12 +12,39 @@ ROLE_CHOICES = (
     (ADMIN, 'Администратор'),
 )
 
+MAX_LENGTH = max(len(choice[0]) for choice in ROLE_CHOICES)
+
+
+def create_username_validator():
+    """Функция для создания валидатора username."""
+
+    return RegexValidator(
+        regex=r'^[\w.@+-]+$',
+        message='Username может содержать только буквы,'
+                'цифры и символы @/./+/-/_.'
+    )
+
 
 class User(AbstractUser):
     """Пользователь"""
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name='Имя пользователя',
+        validators=[create_username_validator()]
+    )
+
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+    )
+
+    last_name = models.CharField(
+        max_length=150,
+    )
 
     role = models.CharField(
-        max_length=20,
+        max_length=MAX_LENGTH,
         choices=ROLE_CHOICES,
         default=USER,
         blank=True
@@ -35,7 +63,10 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == ADMIN or User.objects.filter(
+            is_staff=True,
+            is_superuser=True
+        ).exists()
 
     @property
     def is_user(self):
