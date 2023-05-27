@@ -72,8 +72,8 @@ class GenreViewsSet(MixinsListCreateDestroyViewsSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    #queryset = Title.objects.all().annotate(Avg('reviews__score'))
+    queryset = Title.objects.all().annotate(
+        Avg('reviews__score')).order_by('id')
     serializer_class = TitlesReadOnlySerializer
     permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -83,8 +83,3 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ("retrieve", "list"):
             return TitlesReadOnlySerializer
         return TitleEditSerializer
-
-"""     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return TitleEditSerializer
-        return TitlesReadOnlySerializer """

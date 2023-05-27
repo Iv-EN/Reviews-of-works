@@ -73,20 +73,18 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-        ordering = ('name',)
 
 
 class ReviewCommentBaseClass(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Время добавления',
         auto_now_add=True,
-        null= True
+        null=True
     )
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        #related_name='reviews',
         verbose_name='Автор'
     )
 
@@ -102,7 +100,6 @@ class Review(ReviewCommentBaseClass):
     title = models.ForeignKey(
         to=Title,
         on_delete=models.CASCADE,
-        #related_name='reviews',
         verbose_name='Произведение'
     )
     score = models.SmallIntegerField(
@@ -117,7 +114,7 @@ class Review(ReviewCommentBaseClass):
     class Meta:
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
-        default_related_name='review'
+        default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -126,25 +123,14 @@ class Review(ReviewCommentBaseClass):
         ]
 
 
-"""     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        title = self.title
-        rating = Review.objects.filter(title=title).aggregate(
-            average=models.Avg('score'))
-        if rating['average']:
-            rating = int(rating['average'])
-        title.save() """
-
-
 class Comment(ReviewCommentBaseClass):
     review = models.ForeignKey(
         to=Review,
         on_delete=models.CASCADE,
-        #related_name='comments',
         verbose_name='Ревью'
     )
 
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        default_related_name='comments'
+        default_related_name = 'comments'
