@@ -1,16 +1,25 @@
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import render
 from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
+
 from .filters import FilterTitle
 from .mixins import ModelMixinSet
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleEditSerializer, TitlesReadOnlySerializer)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    TitleEditSerializer,
+    TitlesReadOnlySerializer
+)
 from reviews.models import Category, Genre, Review, Title
-from users.permissions import (ListOrAdminModeratOnly,
-                               AuthenticatedPrivilegedUsersOrReadOnly)
+from users.permissions import (
+    ListOrAdminModeratOnly,
+    AuthenticatedPrivilegedUsersOrReadOnly
+)
 
 
 def redoc(request):
@@ -20,7 +29,7 @@ def redoc(request):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
+    permission_classes = (AuthenticatedPrivilegedUsersOrReadOnly,)
 
     def get_review(self):
         review_id = self.kwargs.get('review_id')
@@ -74,12 +83,14 @@ class GenreViewsSet(GenreCategoryViewSetBaseClass):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        Avg('reviews__score')).order_by('id')
+    serializer_class = TitlesReadOnlySerializer
     permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return TitleEditSerializer
-        return TitlesReadOnlySerializer
+        if self.action in ("retrieve", "list"):
+            return TitlesReadOnlySerializer
+        return TitleEditSerializer
