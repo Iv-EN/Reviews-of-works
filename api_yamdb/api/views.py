@@ -10,8 +10,8 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TitleEditSerializer, TitlesReadOnlySerializer)
 
 from reviews.models import Category, Genre, Review, Title
-from users.permissions import (ListOrAdminModeratOnly,
-                               AuthenticatedPrivilegedUsersOrReadOnly)
+from users.permissions import (AdminModeratReadOnly,
+                               AuthenticatedReadAndUpdate)
 
 
 def redoc(request):
@@ -21,7 +21,7 @@ def redoc(request):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
+    permission_classes = [AuthenticatedReadAndUpdate]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -39,7 +39,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
+    permission_classes = [AuthenticatedReadAndUpdate]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -55,7 +55,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(MixinsListCreateDestroyViewsSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (ListOrAdminModeratOnly,)
+    permission_classes = (AdminModeratReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -64,7 +64,7 @@ class CategoryViewSet(MixinsListCreateDestroyViewsSet):
 class GenreViewsSet(MixinsListCreateDestroyViewsSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (ListOrAdminModeratOnly,)
+    permission_classes = (AdminModeratReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -72,7 +72,7 @@ class GenreViewsSet(MixinsListCreateDestroyViewsSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    permission_classes = (ListOrAdminModeratOnly,)
+    permission_classes = (AdminModeratReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 

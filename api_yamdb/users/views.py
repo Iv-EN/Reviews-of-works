@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django_filters import rest_framework as filters
 
-from .permissions import AdminAndSuperuserOnly
+from .permissions import AdminOnly
 from .serializer import UserCreateSerializer, UserSerializer
 
 User = get_user_model()
@@ -77,7 +77,7 @@ def create_token(request):
 class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     queryset = User.objects.all()
-    permission_classes = (AdminAndSuperuserOnly,)
+    permission_classes = (AdminOnly,)
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.DjangoFilterBackend,)
