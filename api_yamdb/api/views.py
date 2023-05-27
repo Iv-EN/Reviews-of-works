@@ -1,6 +1,6 @@
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from django.shortcuts import render
+from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from .filters import FilterTitle
@@ -8,7 +8,6 @@ from .mixins import ModelMixinSet
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleEditSerializer, TitlesReadOnlySerializer)
-
 from reviews.models import Category, Genre, Review, Title
 from users.permissions import (ListOrAdminModeratOnly,
                                AuthenticatedPrivilegedUsersOrReadOnly)
@@ -23,33 +22,38 @@ class CommentViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
 
-    def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
+    def get_review(self):
         review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id, title=title_id)
-        serializer.save(author=self.request.user, review=review)
+        return get_object_or_404(Review, pk=review_id)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            review=self.get_review()
+        )
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id, title=title_id)
-        return review.comments.all()
+        return self.get_review().comments.all()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
+    permission_classes = (AuthenticatedPrivilegedUsersOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
+
+    def get_title(self):
+        title_id = self.kwargs.get('title_id')
+        return get_object_or_404(Title, pk=title_id)
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(
+            author=self.request.user,
+            title=self.get_title()
+        )
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        review_queryset = Review.objects.filter(title=title_id)
-        return review_queryset
+        return self.get_title().reviews.all()
 
 
 class GenreCategoryViewSetBaseClass(ModelMixinSet):
