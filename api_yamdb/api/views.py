@@ -4,6 +4,7 @@ from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from .filters import FilterTitle
+from django.db.models import Avg
 from .mixins import MixinsListCreateDestroyViewsSet
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
@@ -71,12 +72,14 @@ class GenreViewsSet(MixinsListCreateDestroyViewsSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        Avg('reviews__score')).order_by('id')
+    serializer_class = TitlesReadOnlySerializer
     permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return TitleEditSerializer
-        return TitlesReadOnlySerializer
+        if self.action in ("retrieve", "list"):
+            return TitlesReadOnlySerializer
+        return TitleEditSerializer
