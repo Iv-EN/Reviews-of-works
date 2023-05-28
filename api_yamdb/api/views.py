@@ -4,14 +4,15 @@ from rest_framework import filters, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from .filters import FilterTitle
+from django.db.models import Avg
 from .mixins import MixinsListCreateDestroyViewsSet
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleEditSerializer, TitlesReadOnlySerializer)
 
 from reviews.models import Category, Genre, Review, Title
-from users.permissions import (AdminModeratReadOnly,
-                               AuthenticatedReadAndUpdate)
+from users.permissions import (ListOrAdminModeratOnly,
+                               AuthenticatedPrivilegedUsersOrReadOnly)
 
 
 def redoc(request):
@@ -21,7 +22,7 @@ def redoc(request):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedReadAndUpdate]
+    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -39,7 +40,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [AuthenticatedReadAndUpdate]
+    permission_classes = [AuthenticatedPrivilegedUsersOrReadOnly]
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -55,7 +56,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(MixinsListCreateDestroyViewsSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminModeratReadOnly,)
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -64,19 +65,21 @@ class CategoryViewSet(MixinsListCreateDestroyViewsSet):
 class GenreViewsSet(MixinsListCreateDestroyViewsSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminModeratReadOnly,)
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    permission_classes = (AdminModeratReadOnly,)
+    queryset = Title.objects.all().annotate(
+        Avg('reviews__score')).order_by('id')
+    serializer_class = TitlesReadOnlySerializer
+    permission_classes = (ListOrAdminModeratOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return TitleEditSerializer
-        return TitlesReadOnlySerializer
+        if self.action in ("retrieve", "list"):
+            return TitlesReadOnlySerializer
+        return TitleEditSerializer
