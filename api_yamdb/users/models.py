@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
 
+from api_yamdb.settings import USERNAME_NAME, EMAIL
+
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -15,7 +17,7 @@ ROLE_CHOICES = (
 MAX_LENGTH = max(len(choice[0]) for choice in ROLE_CHOICES)
 
 
-def create_username_validator():
+def username_validator():
     """Функция для создания валидатора username."""
 
     return RegexValidator(
@@ -28,10 +30,10 @@ def create_username_validator():
 class User(AbstractUser):
     """Пользователь"""
     username = models.CharField(
-        max_length=150,
+        max_length=USERNAME_NAME,
         unique=True,
         verbose_name='Имя пользователя',
-        validators=[create_username_validator()]
+        validators=[username_validator()]
     )
 
     first_name = models.CharField(
@@ -52,10 +54,10 @@ class User(AbstractUser):
         default=USER,
         blank=True
     )
-    email = models.EmailField(max_length=254, unique=True)
+    email = models.EmailField(max_length=EMAIL, unique=True)
     bio = models.TextField(
         verbose_name='О себе',
-        max_length=1024,
+        max_length=150,
         blank=True
     )
     confirmation_code = models.CharField(

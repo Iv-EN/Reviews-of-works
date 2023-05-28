@@ -11,36 +11,59 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django_filters import rest_framework as filters
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
+from django.contrib.auth.tokens import default_token_generator
 
 from .permissions import AdminOnly
-from .serializer import UserCreateSerializer, UserSerializer
+from .serializer import (
+    UserCreateSerializer,
+    UserSerializer,
+    RegistrationSerializer
+)
 
 User = get_user_model()
 
 
 @api_view(['POST'])
 def create_user(request):
-    email = request.data.get('email')
-    username = request.data.get('username')
-    if (User.objects.filter(
-        email=email).exists()
-        and User.objects.filter(
-            username=username).exists()):
-        return Response(status=status.HTTP_200_OK)
-    serializer = UserCreateSerializer(data=request.data)
+    """Функция регистрации user, генерации и отправки кода на почту"""
+
+    serializer = RegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    confirmation_code = ''.join(random.choices(digits, k=5))
-    serializer.save(confirmation_code=confirmation_code)
+    username = serializer.validated_data.get('username')
+    email = serializer.validated_data.get('email')
 
+    try:
+        user = User.objects.get(username=username, email=email)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        pass
+
+    try:
+        User.objects.get(username=username)
+        return Response({'error': 'Username уже занят.'}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        pass
+
+    try:
+        User.objects.get(email=email)
+        return Response({'error': 'Email уже зарегистрирован.'}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        pass
+
+    user = User.objects.create(username=username, email=email)
+
+    confirmation_code = default_token_generator.make_token(user)
     send_mail(
-        subject='Регистрация на YaMDB',
-        message=f'Ваш код для подтверждения регистрации: {confirmation_code}',
-        from_email=settings.ADMIN_EMAIL,
-        recipient_list=[request.data['email']]
+        subject='Регистрация в проекте YaMDb.',
+        message=f'Ваш код подтверждения: {confirmation_code}',
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email]
     )
 
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
