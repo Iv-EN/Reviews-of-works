@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .validators import ValidateUsername
 from api_yamdb.settings import USERNAME_NAME, EMAIL
+from .validators import ValidateUsername
+
 
 User = get_user_model()
 
@@ -43,7 +44,6 @@ class UserSerializer(BaseUserSerializer):
         return role
 
 
-
 class RegistrationSerializer(serializers.Serializer, ValidateUsername):
     username = serializers.CharField(required=True, max_length=USERNAME_NAME)
     email = serializers.EmailField(required=True, max_length=EMAIL)
@@ -52,3 +52,9 @@ class RegistrationSerializer(serializers.Serializer, ValidateUsername):
 class TokenSerializer(serializers.Serializer, ValidateUsername):
     username = serializers.CharField(required=True, max_length=USERNAME_NAME)
     confirmation_code = serializers.CharField(required=True)
+
+
+class UserEditSerializer(UserSerializer):
+    """Сериализатор модели User для get и patch"""
+
+    role = serializers.CharField(read_only=True)
