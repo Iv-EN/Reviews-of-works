@@ -16,13 +16,17 @@ from reviews.models import Category, Genre, Review, Title
 
 from .filters import FilterTitle
 from .mixins import ModelMixinSet
-from .permissions import (AdminModeratReadOnly, AdminOnly,
-                          AuthenticatedReadAndUpdate)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, RegistrationSerializer,
-                          ReviewSerializer, TitleEditSerializer,
-                          TitlesReadOnlySerializer, TokenSerializer,
-                          UserEditSerializer, UserSerializer)
+from .permissions import (
+    AdminReadOnly, AdminOnly,
+    AuthorModeratorAdminOrReadOnly
+    )
+from .serializers import (
+    CategorySerializer, CommentSerializer,
+    GenreSerializer, UserCreateSerializer,
+    ReviewSerializer, TitleEditSerializer,
+    TitlesReadOnlySerializer, TokenSerializer,
+    UserSerializer, BaseUserSerializer,
+)
 
 User = get_user_model()
 
@@ -31,7 +35,7 @@ User = get_user_model()
 def create_user(request):
     """Функция регистрации user, генерации и отправки кода на почту"""
 
-    serializer = RegistrationSerializer(data=request.data)
+    serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     username = serializer.validated_data.get('username')
@@ -82,7 +86,7 @@ def create_token(request):
         User, username=serializer.validated_data['username']
     )
     if default_token_generator.check_token(
-            user, serializer.validated_data['confirmation_code']
+        user, serializer.validated_data['confirmation_code']
     ):
         token = RefreshToken.for_user(user)
         return Response(
@@ -105,17 +109,18 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         url_path='me',
         permission_classes=[IsAuthenticated],
-        serializer_class=UserEditSerializer,
+        serializer_class=BaseUserSerializer,
     )
     def get_edit_user(self, request):
         user = request.user
-        serializer = self.get_serializer(user)
+
         if request.method == 'PATCH':
-            serializer = self.get_serializer(
-                user, data=request.data, partial=True
-            )
+            serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -126,7 +131,7 @@ def redoc(request):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthenticatedReadAndUpdate,)
+    permission_classes = (AuthorModeratorAdminOrReadOnly,)
 
     def get_review(self):
         review_id = self.kwargs.get('review_id')
@@ -145,7 +150,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthenticatedReadAndUpdate,
+    permission_classes = (AuthorModeratorAdminOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly)
 
     def get_title(self):
@@ -163,7 +168,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class GenreCategoryViewSetBaseClass(ModelMixinSet):
-    permission_classes = (AdminModeratReadOnly,)
+    permission_classes = (AdminReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -183,7 +188,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
         Avg('reviews__score')).order_by('id')
     serializer_class = TitlesReadOnlySerializer
-    permission_classes = (AdminModeratReadOnly,)
+    permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
 

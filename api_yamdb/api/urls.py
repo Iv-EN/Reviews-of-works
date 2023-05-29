@@ -1,7 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from . import views
 from .views import (CategoryViewSet, CommentViewSet, GenreViewsSet,
                     ReviewViewSet, TitleViewSet, UserViewSet, create_token,
                     create_user)
@@ -38,9 +37,5 @@ urls_auth = [
 urlpatterns = [
     path('v1/', include(urls_auth)),
     path('v1/', include(router_v1.urls)),
-    path(
-        'redoc/', views.redoc,
-        name='redoc'
-    ),
     path('v1/', include(router_v1.urls)),
 ]
