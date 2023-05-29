@@ -86,7 +86,7 @@ def create_token(request):
         User, username=serializer.validated_data['username']
     )
     if default_token_generator.check_token(
-        user, serializer.validated_data['confirmation_code']
+            user, serializer.validated_data['confirmation_code']
     ):
         token = RefreshToken.for_user(user)
         return Response(
@@ -113,14 +113,13 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def get_edit_user(self, request):
         user = request.user
-
+        serializer = self.get_serializer(user)
         if request.method == 'PATCH':
-            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer = self.get_serializer(
+                user, data=request.data, partial=True
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

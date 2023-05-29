@@ -7,7 +7,7 @@
 Команда разработки:
 - :white_check_mark: [AvailableNow (в роли Python-разработчика Тимлид - разработчик 1)](https://github.com/AvailableNow)
 - :white_check_mark: [Iv-EN (в роли Python-разработчика - разработчик 2)](https://github.com/Iv-EN)
-- :white_check_mark: [Kristina-kul роль (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
+- :white_check_mark: [Kristina-kul (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
 
 Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
 
@@ -72,5 +72,32 @@ $ python manage.py migrate
 $ python manage.py runserver
 ```
 
-### Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
-### Документация API проекта: http://127.0.0.1:8000/api/v1/redoc/
+# Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
+# Документация API проекта: http://127.0.0.1:8000/redoc/
+
+### Импорт данных из csv для наполнения базы:
+
+Запустите команду импорта:
+
+```
+python manage.py load_csv_data
+```
+
+В терминале отобразится результат импорта.<br>
+Если какой-либо из файлов отсутствует, то он не будет импортирован.
+
+Примеры файлов csv для наполнения базы находятся в папке reviews/management/data/*.csv:
+- users.csv - файл для заполнения таблицы пользователей
+- titles.csv - файл для заполнения таблицы произведений.
+- category.csv - файл для заполнения таблицы категорий произведений.
+- genre.csv - файл для заполнения таблицы жанров произведений.
+- genre_title.csv - файл для заполнения таблицы Many-to-Many: одно произведение может иметь несколько жанров.
+- review.csv - файл для заполнения таблицы отзывов к произведениям.
+- comments.csv - файл для заполнения таблицы комментариев к отзывам.
+<br>
+
+Авторы проекта:
+<br>
+Auth/Users: Илья [Github](https://github.com/AvailableNow)<br>
+Titles/Category/Genre: Женя [Github](https://github.com/Iv-EN)<br>
+Reviews/Comments: Кристина [Github](https://github.com/Kristina-kul)<br>
