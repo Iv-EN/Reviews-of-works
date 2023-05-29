@@ -2,14 +2,13 @@ from django.urls import include, path
 from rest_framework import routers
 
 from . import views
-from api.views import (CategoryViewSet,
-                       CommentViewSet,
-                       GenreViewsSet,
-                       TitleViewSet,
-                       ReviewViewSet)
+from .views import (CategoryViewSet, CommentViewSet, GenreViewsSet,
+                    ReviewViewSet, TitleViewSet, UserViewSet, create_token,
+                    create_user)
 
 router_v1 = routers.DefaultRouter()
 
+router_v1.register('users', UserViewSet)
 router_v1.register(
     'categories',
     CategoryViewSet,
@@ -31,7 +30,14 @@ router_v1.register(
     CommentViewSet,
     basename='comments')
 
+urls_auth = [
+    path('auth/signup/', create_user, name='create_user'),
+    path('auth/token/', create_token, name='create_token'),
+]
+
 urlpatterns = [
+    path('v1/', include(urls_auth)),
+    path('v1/', include(router_v1.urls)),
     path(
         'redoc/', views.redoc,
         name='redoc'
