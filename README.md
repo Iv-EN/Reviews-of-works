@@ -22,3 +22,55 @@
 - Django 2.2.28
 - DRF
 - JWT
+
+# api_yamdb
+api_yamdb
+# Описание и установка проекта API_YAMDB
+Это командный проект, в котором описаны конечные точки API для сайта с отзывами на кино, музыку и книги.
+С помощью этих конечных точек можно полностью интегрировать функционал сайта в свое приложение.
+
+Я занимался разработкой кастомной модели пользователя, регистрации и подтверждения через E-mail, реализовал работу с токеном и права доступа. 
+
+## Установка и запуск проекта
+1. Установите python
+[вот ссылка](https://www.python.org/downloads/).
+
+2. В комнадной строке клонируйте этот репозиторий на компьютер:
+```
+$ git clone git@github.com:AvailableNow/api_yamdb.git
+```
+
+3. Перейдите в папку api_yamdb
+```
+$ cd api_yamdb
+```
+
+4. Создайте и активируйте виртуальное окружение:
+```
+$ python -m venv venv (windows)
+$ python3 -m venv venv (mac)
+
+$ source venv/Scripts/activate (windows)
+$ source venv/bin/activate (mac)
+```
+
+5. Установите зависимости проекта:
+```
+$ python -m pip install --upgrade pip
+
+$ pip install -r requirements.txt
+```
+
+6. Выполните миграции:
+```
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+7. Запустите проект:
+```
+$ python manage.py runserver
+```
+
+### Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
+### Документация API проекта: http://127.0.0.1:8000/api/v1/redoc/
