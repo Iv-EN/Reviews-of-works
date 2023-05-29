@@ -15,7 +15,7 @@ class GenreCategoryBaseClass(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='Слаг',
+        verbose_name='Адрес',
         unique=True
     )
 
