@@ -24,10 +24,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'users.apps.UsersConfig',
+    'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'django_filters',
-    'reviews',
+
 ]
 
 MIDDLEWARE = [
@@ -73,8 +73,8 @@ DATABASES = {
 
 
 # Password validation
-AUTH_USER_MODEL = 'users.User'
-AUTH_PROFILE_MODULE = 'users.User'
+AUTH_USER_MODEL = 'reviews.User'
+AUTH_PROFILE_MODULE = 'reviews.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
