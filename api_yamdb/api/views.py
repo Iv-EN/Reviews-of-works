@@ -2,10 +2,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404, render
+from django.db.models import Avg, Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
@@ -15,14 +15,17 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title
 
 from .filters import FilterTitle
-from .mixins import ModelMixinSet
-from .permissions import (AdminModeratReadOnly, AdminOnly,
-                          AuthenticatedReadAndUpdate)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, RegistrationSerializer,
-                          ReviewSerializer, TitleEditSerializer,
-                          TitlesReadOnlySerializer, TokenSerializer,
-                          UserEditSerializer, UserSerializer)
+from .permissions import (
+    AdminReadOnly, AdminOnly,
+    AuthorModeratorAdminOrReadOnly
+)
+from .serializers import (
+    CategorySerializer, CommentSerializer,
+    GenreSerializer, UserCreateSerializer,
+    ReviewSerializer, TitleEditSerializer,
+    TitlesReadOnlySerializer, TokenSerializer,
+    UserSerializer, BaseUserSerializer,
+)
 
 User = get_user_model()
 
@@ -31,38 +34,28 @@ User = get_user_model()
 def create_user(request):
     """Функция регистрации user, генерации и отправки кода на почту"""
 
-    serializer = RegistrationSerializer(data=request.data)
+    serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     username = serializer.validated_data.get('username')
     email = serializer.validated_data.get('email')
 
     try:
-        user = User.objects.get(username=username, email=email)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(Q(username=username) | Q(email=email))
+        if user.username == username and user.email == email:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif user.username == username:
+            return Response(
+                {'error': 'Username уже занят.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        elif user.email == email:
+            return Response(
+                {'error': 'Email уже зарегистрирован.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     except User.DoesNotExist:
-        pass
-
-    try:
-        User.objects.get(username=username)
-        return Response(
-            {'error': 'Username уже занят.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except User.DoesNotExist:
-        pass
-
-    try:
-        User.objects.get(email=email)
-        return Response(
-            {'error': 'Email уже зарегистрирован.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except User.DoesNotExist:
-        pass
-
-    user = User.objects.create(username=username, email=email)
-
+        user = User.objects.create(username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
@@ -105,7 +98,7 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         url_path='me',
         permission_classes=[IsAuthenticated],
-        serializer_class=UserEditSerializer,
+        serializer_class=BaseUserSerializer,
     )
     def get_edit_user(self, request):
         user = request.user
@@ -119,18 +112,13 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def redoc(request):
-    return render(request, 'api/redoc.html')
-
-
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthenticatedReadAndUpdate,)
+    permission_classes = (AuthorModeratorAdminOrReadOnly,)
 
     def get_review(self):
-        review_id = self.kwargs.get('review_id')
-        return get_object_or_404(Review, pk=review_id)
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def perform_create(self, serializer):
         serializer.save(
@@ -145,12 +133,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthenticatedReadAndUpdate,
+    permission_classes = (AuthorModeratorAdminOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly)
 
     def get_title(self):
-        title_id = self.kwargs.get('title_id')
-        return get_object_or_404(Title, pk=title_id)
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def perform_create(self, serializer):
         serializer.save(
@@ -162,30 +149,35 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
 
-class GenreCategoryViewSetBaseClass(ModelMixinSet):
-    permission_classes = (AdminModeratReadOnly,)
+class GenreCategoryMixinsBaseClass(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    permission_classes = (AdminReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
-class CategoryViewSet(GenreCategoryViewSetBaseClass):
+class CategoryViewSet(GenreCategoryMixinsBaseClass):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewsSet(GenreCategoryViewSetBaseClass):
+class GenreViewsSet(GenreCategoryMixinsBaseClass):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(
-        Avg('reviews__score')).order_by('id')
-    serializer_class = TitlesReadOnlySerializer
-    permission_classes = (AdminModeratReadOnly,)
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score'))
+    permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
+    ordering_fields = ('name',)
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):

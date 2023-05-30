@@ -9,7 +9,7 @@ class AdminOnly(BasePermission):
         return user.is_authenticated and user.is_admin
 
 
-class AuthenticatedReadAndUpdate(BasePermission):
+class AuthorModeratorAdminOrReadOnly(BasePermission):
     """Разрешение доступа на чтение всем и
     на редактирование только
     аутентифицированным пользователям"""
@@ -30,7 +30,7 @@ class AuthenticatedReadAndUpdate(BasePermission):
         )
 
 
-class AdminModeratReadOnly(BasePermission):
+class AdminReadOnly(BasePermission):
     """Разрешает получения списка всем и редактирование
     только  администратору/суперпользователю"""
 

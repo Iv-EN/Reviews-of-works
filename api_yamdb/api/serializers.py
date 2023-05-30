@@ -1,21 +1,36 @@
+import re
+
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from api_yamdb.settings import USERNAME_NAME, EMAIL
 from reviews.models import Category, Comment, Genre, Review, Title
-from users.validators import ValidateUsername
 
 User = get_user_model()
 
 
-class UserCreateSerializer(serializers.Serializer, ValidateUsername):
-    class Meta:
-        model = User
-        fields = ('username', 'email')
+class ValidateUsernameMixin:
+    """Валидаторы для username."""
+
+    def validate_username(self, username):
+        pattern = re.compile(r'^[\w.@+-]+')
+
+        if pattern.fullmatch(username) is None:
+            match = re.split(pattern, username)
+            symbol = ''.join(match)
+            raise ValidationError(f'Некорректные символы в username: {symbol}')
+        if username == 'me':
+            raise ValidationError('Ник "me" нельзя регистрировать!')
+        return username
 
 
-class BaseUserSerializer(serializers.ModelSerializer, ValidateUsername):
+class UserCreateSerializer(ValidateUsernameMixin, serializers.Serializer):
+    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
+    email = serializers.EmailField(required=True, max_length=EMAIL)
+
+
+class UserSerializer(ValidateUsernameMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -26,39 +41,16 @@ class BaseUserSerializer(serializers.ModelSerializer, ValidateUsername):
             'bio',
             'role'
         )
+
+
+class BaseUserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
-class UserSerializer(BaseUserSerializer):
-    class Meta(BaseUserSerializer.Meta):
-        read_only_fields = ()
-
-    def validate_role(self, role):
-        req_user = self.context['request'].user
-        user = User.objects.get(username=req_user)
-
-        if user.is_moderator:
-            if role != 'admin':
-                role = 'admin'
-        elif user.is_user:
-            role = user.role
-        return role
-
-
-class RegistrationSerializer(serializers.Serializer, ValidateUsername):
-    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
-    email = serializers.EmailField(required=True, max_length=EMAIL)
-
-
-class TokenSerializer(serializers.Serializer, ValidateUsername):
+class TokenSerializer(ValidateUsernameMixin, serializers.Serializer):
     username = serializers.CharField(required=True, max_length=USERNAME_NAME)
     confirmation_code = serializers.CharField(required=True)
-
-
-class UserEditSerializer(UserSerializer):
-    """Сериализатор модели User для get и patch"""
-
-    role = serializers.CharField(read_only=True)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -76,18 +68,23 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username')
 
     def validate(self, data):
-        request = self.context['request']
-        if request.method == 'POST':
-            title = self.context['view'].kwargs.get('title_id')
-            if Review.objects.filter(title=title,
-                                     author=request.user).exists():
-                raise ValidationError('Вы не можете добавить более'
-                                      'одного отзыва на произведение')
+        if self.context['request'].method != 'POST':
+            return data
+        title_id = self.context['view'].kwargs.get('title_id')
+        author = self.context['request'].user
+        review = Review.objects.filter(
+            author=author, title=title_id
+        )
+        if review.exists():
+            raise serializers.ValidationError(
+                'Вы не можете добавить более'
+                'одного отзыва на произведение')
         return data
 
     class Meta:
         model = Review
-        exclude = ('title',)
+        fields = (
+            'id', 'text', 'author', 'pub_date', 'score')
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -112,20 +109,17 @@ class GenreSerializer(serializers.ModelSerializer):
         }
 
 
-class TitlesReadOnlySerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(read_only=True)
-    year = serializers.IntegerField(read_only=True)
-    description = serializers.CharField(read_only=True)
-    rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True)
+class TitlesReadOnlySerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     category = CategorySerializer(read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'description', 'rating', 'genre', 'category')
+            'id', 'name', 'year', 'description', 'rating', 'genre', 'category'
+        )
+        read_only_fields = ['__all__']
 
 
 class TitleEditSerializer(serializers.ModelSerializer):
