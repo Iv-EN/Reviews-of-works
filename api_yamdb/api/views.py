@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
@@ -42,31 +42,21 @@ def create_user(request):
     email = serializer.validated_data.get('email')
 
     try:
-        user = User.objects.get(username=username, email=email)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(Q(username=username) | Q(email=email))
+        if user.username == username and user.email == email:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif user.username == username:
+            return Response(
+                {'error': 'Username уже занят.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        elif user.email == email:
+            return Response(
+                {'error': 'Email уже зарегистрирован.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     except User.DoesNotExist:
-        pass
-
-    try:
-        User.objects.get(username=username)
-        return Response(
-            {'error': 'Username уже занят.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except User.DoesNotExist:
-        pass
-
-    try:
-        User.objects.get(email=email)
-        return Response(
-            {'error': 'Email уже зарегистрирован.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except User.DoesNotExist:
-        pass
-
-    user = User.objects.create(username=username, email=email)
-
+        user = User.objects.create(username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
