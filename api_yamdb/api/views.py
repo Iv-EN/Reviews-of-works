@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
@@ -15,7 +15,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title
 
 from .filters import FilterTitle
-from .mixins import ModelMixinSet
 from .permissions import (
     AdminReadOnly, AdminOnly,
     AuthorModeratorAdminOrReadOnly
@@ -113,10 +112,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def redoc(request):
-    return render(request, 'api/redoc.html')
-
-
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
@@ -156,30 +151,35 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
 
-class GenreCategoryViewSetBaseClass(ModelMixinSet):
+class GenreCategoryMixinsBaseClass(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
     permission_classes = (AdminReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
-class CategoryViewSet(GenreCategoryViewSetBaseClass):
+class CategoryViewSet(GenreCategoryMixinsBaseClass):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewsSet(GenreCategoryViewSetBaseClass):
+class GenreViewsSet(GenreCategoryMixinsBaseClass):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(
-        Avg('reviews__score')).order_by('id')
-    serializer_class = TitlesReadOnlySerializer
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score'))
     permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
+    ordering_fields = ('name',)
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
