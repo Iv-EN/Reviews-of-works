@@ -72,5 +72,5 @@ $ python manage.py migrate
 $ python manage.py runserver
 ```
 
-### Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
+
 ### Документация API проекта: http://127.0.0.1:8000/api/v1/redoc/
