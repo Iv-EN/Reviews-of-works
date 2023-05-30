@@ -155,7 +155,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
 
-class ReviewCommentBaseClass(models.Model):
+class CommonClass(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Время добавления',
         auto_now_add=True,
@@ -165,7 +165,8 @@ class ReviewCommentBaseClass(models.Model):
     author = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        verbose_name='Автор',
+        related_name='author-%(class)s'
     )
 
     def __str__(self):
@@ -173,10 +174,10 @@ class ReviewCommentBaseClass(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('pub_date',)
+        ordering = ('-pub_date',)
 
 
-class Review(ReviewCommentBaseClass):
+class Review(CommonClass):
     title = models.ForeignKey(
         to=Title,
         on_delete=models.CASCADE,
@@ -185,7 +186,7 @@ class Review(ReviewCommentBaseClass):
     score = models.SmallIntegerField(
         default=1,
         validators=[
-            MinValueValidator(0),
+            MinValueValidator(1),
             MaxValueValidator(10),
         ],
         verbose_name='Оценка',
@@ -195,6 +196,7 @@ class Review(ReviewCommentBaseClass):
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
         default_related_name = 'reviews'
+        ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -203,7 +205,7 @@ class Review(ReviewCommentBaseClass):
         ]
 
 
-class Comment(ReviewCommentBaseClass):
+class Comment(CommonClass):
     review = models.ForeignKey(
         to=Review,
         on_delete=models.CASCADE,
@@ -214,3 +216,4 @@ class Comment(ReviewCommentBaseClass):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
+        ordering = ('-pub_date',)

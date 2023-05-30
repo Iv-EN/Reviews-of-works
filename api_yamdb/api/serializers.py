@@ -68,18 +68,23 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username')
 
     def validate(self, data):
-        request = self.context['request']
-        if request.method == 'POST':
-            title = self.context['view'].kwargs.get('title_id')
-            if Review.objects.filter(title=title,
-                                     author=request.user).exists():
-                raise ValidationError('Вы не можете добавить более'
-                                      'одного отзыва на произведение')
+        if self.context['request'].method != 'POST':
+            return data
+        title_id = self.context['view'].kwargs.get('title_id')
+        author = self.context['request'].user
+        review = Review.objects.filter(
+            author=author, title=title_id
+        )
+        if review.exists():
+            raise serializers.ValidationError(
+                'Вы не можете добавить более'
+                'одного отзыва на произведение')
         return data
 
     class Meta:
         model = Review
-        exclude = ('title',)
+        fields = (
+            'id', 'text', 'author', 'pub_date', 'score')
 
 
 class CategorySerializer(serializers.ModelSerializer):
