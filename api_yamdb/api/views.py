@@ -19,7 +19,7 @@ from .mixins import ModelMixinSet
 from .permissions import (
     AdminReadOnly, AdminOnly,
     AuthorModeratorAdminOrReadOnly
-    )
+)
 from .serializers import (
     CategorySerializer, CommentSerializer,
     GenreSerializer, UserCreateSerializer,

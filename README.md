@@ -5,9 +5,9 @@
 Список категорий (Category) может быть расширен (например, можно добавить категорию «Изобразительное искусство» или «Ювелирка»).
 
 Команда разработки:
-- :white_check_mark: [AvailableNow (в роли Python-разработчика Тимлид - разработчик 1)](https://github.com/AvailableNow)
-- :white_check_mark: [Iv-EN (в роли Python-разработчика - разработчик 2)](https://github.com/Iv-EN)
-- :white_check_mark: [Kristina-kul (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
+- :white_check_mark: Auth/Users: [Илья Шунин (в роли Python-разработчика Тимлид - разработчик 1)](https://github.com/AvailableNow)
+- :white_check_mark: Titles/Category/Genre: [Евгений Иванов (в роли Python-разработчика - разработчик 2)](https://github.com/Iv-EN)
+- :white_check_mark: Reviews/Comments: [Кристина Скоринова (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
 
 Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
 
@@ -72,8 +72,8 @@ $ python manage.py migrate
 $ python manage.py runserver
 ```
 
-# Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
-# Документация API проекта: http://127.0.0.1:8000/redoc/
+#### Сейчас проект должен быть доступен по адресу: http://127.0.0.1:8000/api/v1/
+#### Документация API проекта: http://127.0.0.1:8000/redoc/
 
 ### Импорт данных из csv для наполнения базы:
 
@@ -95,9 +95,3 @@ python manage.py load_csv_data
 - review.csv - файл для заполнения таблицы отзывов к произведениям.
 - comments.csv - файл для заполнения таблицы комментариев к отзывам.
 <br>
-
-Авторы проекта:
-<br>
-Auth/Users: Илья [Github](https://github.com/AvailableNow)<br>
-Titles/Category/Genre: Женя [Github](https://github.com/Iv-EN)<br>
-Reviews/Comments: Кристина [Github](https://github.com/Kristina-kul)<br>
