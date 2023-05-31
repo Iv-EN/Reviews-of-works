@@ -8,7 +8,7 @@ def validate_year(value):
     now = timezone.now().year
     if value > now:
         raise ValidationError(
-            (f'Сейчас идёт {now} год, а год {value} это что-то из будущего')
+            (f'Указанный год {value} больше текущего {now}')
         )
     return value
 

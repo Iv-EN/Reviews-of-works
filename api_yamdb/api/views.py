@@ -169,12 +169,11 @@ class GenreViewsSet(GenreCategoryMixinsBaseClass):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
-    ordering_fields = ('name',)
+    ordering = ['-rating']
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):

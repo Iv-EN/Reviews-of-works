@@ -136,6 +136,7 @@ class Title(models.Model):
         return self.name
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -151,7 +152,7 @@ class CommonClass(models.Model):
         to=settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name='Автор',
-        related_name='author-%(class)s'
+        related_name='%(class)s'
     )
 
     def __str__(self):
