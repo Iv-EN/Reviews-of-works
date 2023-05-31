@@ -37,8 +37,12 @@ def create_user(request):
     username = serializer.validated_data.get('username')
     email = serializer.validated_data.get('email')
 
-    try:
-        user = User.objects.get(Q(username=username) | Q(email=email))
+    user, created = User.objects.get_or_create(
+        Q(username=username) | Q(email=email),
+        defaults={'username': username, 'email': email}
+    )
+
+    if not created:
         if user.username == username and user.email == email:
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif user.username == username:
@@ -51,8 +55,7 @@ def create_user(request):
                 {'error': 'Email уже зарегистрирован.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-    except User.DoesNotExist:
-        user = User.objects.create(username=username, email=email)
+
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
