@@ -42,17 +42,16 @@ def create_user(request):
         if user.username == username and user.email == email:
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif user.username == username:
-            return Response(
-                {'error': 'Username уже занят.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            error_message = 'Username уже занят.'
         elif user.email == email:
-            return Response(
-                {'error': 'Email уже зарегистрирован.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            error_message = 'Email уже зарегистрирован.'
+        return Response(
+            {'error': error_message},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     except User.DoesNotExist:
-        user = User.objects.create(username=username, email=email)
+        user = User(username=username, email=email)
+        user.save()
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
