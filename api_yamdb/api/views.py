@@ -50,8 +50,8 @@ def create_user(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     except User.DoesNotExist:
-        user = User(username=username, email=email)
-        user.save()
+        pass
+    user = User.objects.create(username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
