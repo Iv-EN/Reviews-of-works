@@ -1,33 +1,17 @@
-import re
-
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from rest_framework import serializers
 
-from api_yamdb.settings import USERNAME_NAME, EMAIL
-from reviews.models import Category, Comment, Genre, Review, Title
-
-User = get_user_model()
-
-
-class ValidateUsernameMixin:
-    """Валидаторы для username."""
-
-    def validate_username(self, username):
-        pattern = re.compile(r'^[\w.@+-]+')
-
-        if pattern.fullmatch(username) is None:
-            match = re.split(pattern, username)
-            symbol = ''.join(match)
-            raise ValidationError(f'Некорректные символы в username: {symbol}')
-        if username == 'me':
-            raise ValidationError('Ник "me" нельзя регистрировать!')
-        return username
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import ValidateUsernameMixin
 
 
 class UserCreateSerializer(ValidateUsernameMixin, serializers.Serializer):
-    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
-    email = serializers.EmailField(required=True, max_length=EMAIL)
+    username = serializers.CharField(
+        required=True, max_length=settings.LEN_USERNAME_NAME
+    )
+    email = serializers.EmailField(
+        required=True, max_length=settings.LEN_EMAIL
+    )
 
 
 class UserSerializer(ValidateUsernameMixin, serializers.ModelSerializer):
@@ -49,7 +33,9 @@ class BaseUserSerializer(UserSerializer):
 
 
 class TokenSerializer(ValidateUsernameMixin, serializers.Serializer):
-    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
+    username = serializers.CharField(
+        required=True, max_length=settings.LEN_USERNAME_NAME
+    )
     confirmation_code = serializers.CharField(required=True)
 
 
