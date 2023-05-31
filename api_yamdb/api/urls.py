@@ -1,9 +1,11 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import (CategoryViewSet, CommentViewSet, GenreViewsSet,
-                    ReviewViewSet, TitleViewSet, UserViewSet, create_token,
-                    create_user)
+from .views import (
+    CategoryViewSet, CommentViewSet, GenreViewsSet,
+    ReviewViewSet, TitleViewSet, UserViewSet, create_token,
+    create_user
+)
 
 router_v1 = routers.DefaultRouter()
 
@@ -36,6 +38,5 @@ urls_auth = [
 
 urlpatterns = [
     path('v1/', include(urls_auth)),
-    path('v1/', include(router_v1.urls)),
     path('v1/', include(router_v1.urls)),
 ]

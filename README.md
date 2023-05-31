@@ -5,9 +5,9 @@
 Список категорий (Category) может быть расширен (например, можно добавить категорию «Изобразительное искусство» или «Ювелирка»).
 
 Команда разработки:
-- :white_check_mark: Auth/Users: [Илья Шунин (в роли Python-разработчика Тимлид - разработчик 1)](https://github.com/AvailableNow)
-- :white_check_mark: Titles/Category/Genre: [Евгений Иванов (в роли Python-разработчика - разработчик 2)](https://github.com/Iv-EN)
-- :white_check_mark: Reviews/Comments: [Кристина Скоринова (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
+- :white_check_mark: Auth/Users: [Илья Шунин](https://github.com/AvailableNow)
+- :white_check_mark: Titles/Category/Genre: [Евгений Иванов](https://github.com/Iv-EN)
+- :white_check_mark: Reviews/Comments: [Кристина Скоринова](https://github.com/Kristina-kul)
 
 Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
 
