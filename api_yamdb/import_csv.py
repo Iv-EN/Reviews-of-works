@@ -1,7 +1,7 @@
 from csv import DictReader
 
 from django.core.management import BaseCommand
-from reviews.models import Comment, Review, Category, Genre, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class Command(BaseCommand):
@@ -17,6 +17,7 @@ class Command(BaseCommand):
                 last_name=row['last_name']
             )
             user.save()
+        print('информация по юзеру импортирована успешна')
         for row in DictReader(
             open('./static/data/category.csv')
         ):
@@ -24,11 +25,13 @@ class Command(BaseCommand):
                 id=row['id'], name=row['name'], slug=row['slug']
             )
             category.save()
+        print('category OK')
         for row in DictReader(
             open('./static/data/genre.csv')
         ):
             genre = Genre(id=row['id'], name=row['name'], slug=row['slug'])
             genre.save()
+        print('genre OK')
         for row in DictReader(
             open('./static/data/titles.csv')
         ):
@@ -37,6 +40,7 @@ class Command(BaseCommand):
                 year=row['year'], category_id=row['category_id']
             )
             title.save()
+        print('title OK')
         for row in DictReader(
             open('./static/data/review.csv')
         ):
@@ -46,6 +50,7 @@ class Command(BaseCommand):
                 score=row['score'], pub_date=row['pub_date']
             )
             review.save()
+        print('review OK')
         for row in DictReader(
             open('./static/data/comments.csv')
         ):
@@ -55,3 +60,4 @@ class Command(BaseCommand):
                 pub_date=row['pub_date']
             )
             comment.save()
+        print('comment OK')
