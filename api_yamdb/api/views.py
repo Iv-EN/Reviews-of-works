@@ -38,8 +38,8 @@ def create_user(request):
     email = serializer.validated_data.get('email')
 
     user, created = User.objects.get_or_create(
-        Q(username=username) | Q(email=email),
-        defaults={'username': username, 'email': email}
+        username=username,
+        defaults={'email': email}
     )
 
     if not created:
