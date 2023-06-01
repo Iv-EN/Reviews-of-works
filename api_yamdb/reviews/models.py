@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator, MinValueValidator,
-    RegexValidator
 )
 from django.db import models
 
@@ -76,20 +75,21 @@ class User(AbstractUser):
 class GenreCategoryBaseClass(models.Model):
     name = models.CharField(
         max_length=256,
+        db_index=True,
         verbose_name='Название'
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='Адрес',
+        verbose_name='URL-адрес',
         unique=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         abstract = True
-        ordering = ('name',)
+        ordering = ('id',)
+
+    def __str__(self):
+        return self.name[:30]
 
 
 class Category(GenreCategoryBaseClass):
@@ -126,19 +126,20 @@ class Title(models.Model):
     )
     category = models.ForeignKey(
         Category,
-        verbose_name='Категория',
         on_delete=models.SET_NULL,
-        related_name='titles',
-        null=True
+        null=True,
+        blank=True,
+        verbose_name='Категория',
+        related_name='titles'
     )
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         ordering = ['name']
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+
+    def __str__(self):
+        return self.name[:30]
 
 
 class CommonClass(models.Model):
@@ -149,7 +150,7 @@ class CommonClass(models.Model):
     )
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор',
         related_name='%(class)s'
