@@ -75,13 +75,13 @@ class GenreCategoryBaseClass(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='URL-адрес',
+        verbose_name='Ссылка',
         unique=True
     )
 
     class Meta:
         abstract = True
-        ordering = ('id',)
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:30]
@@ -129,7 +129,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
