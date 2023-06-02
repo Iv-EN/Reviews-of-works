@@ -49,12 +49,7 @@ class User(AbstractUser):
     email = models.EmailField(max_length=settings.LEN_EMAIL, unique=True)
     bio = models.TextField(
         verbose_name='О себе',
-        max_length=150,
         blank=True
-    )
-    confirmation_code = models.CharField(
-        max_length=5,
-        verbose_name='Код подтверждения',
     )
 
     @property
