@@ -1,5 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import ValidateUsernameMixin
@@ -56,12 +57,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.context['request'].method != 'POST':
             return data
-        title_id = self.context['view'].kwargs.get('title_id')
-        author = self.context['request'].user
-        review = Review.objects.filter(
-            author=author, title=title_id
-        )
-        if review.exists():
+        if Review.objects.filter(
+            author=self.context['request'].user, 
+            title=get_object_or_404(
+                Title,
+                id=self.context['view'].kwargs.get('title_id'))
+            ).exists():
             raise serializers.ValidationError(
                 'Вы не можете добавить более'
                 'одного отзыва на произведение')

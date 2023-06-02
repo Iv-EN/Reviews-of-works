@@ -142,7 +142,7 @@ class Title(models.Model):
         return self.name[:30]
 
 
-class CommonClass(models.Model):
+class TextAuthorPubDate(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Время добавления',
         auto_now_add=True,
@@ -164,7 +164,7 @@ class CommonClass(models.Model):
         ordering = ('-pub_date',)
 
 
-class Review(CommonClass):
+class Review(TextAuthorPubDate):
     title = models.ForeignKey(
         to=Title,
         on_delete=models.CASCADE,
@@ -183,7 +183,6 @@ class Review(CommonClass):
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
         default_related_name = 'reviews'
-        ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -192,7 +191,7 @@ class Review(CommonClass):
         ]
 
 
-class Comment(CommonClass):
+class Comment(TextAuthorPubDate):
     review = models.ForeignKey(
         to=Review,
         on_delete=models.CASCADE,
@@ -203,4 +202,3 @@ class Comment(CommonClass):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
-        ordering = ('-pub_date',)
