@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -108,8 +109,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'email'
@@ -134,11 +135,12 @@ SIMPLE_JWT = {
 }
 
 ADMIN_EMAIL = 'admin@mail.com'
+FORBIDDEN_USERNAME = 'me'
 
-CUT_TEXT: int = 30
+CUT_TEXT = 30
 
-USERNAME_NAME: int = 150
-EMAIL: int = 254
+LEN_USERNAME_NAME = 150
+LEN_EMAIL = 254
 
-LEN_FOR_NAME: int = 256
-LEN_FOR_SLUG: int = 50
+LEN_FOR_NAME = 256
+LEN_FOR_SLUG = 50

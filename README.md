@@ -5,9 +5,9 @@
 Список категорий (Category) может быть расширен (например, можно добавить категорию «Изобразительное искусство» или «Ювелирка»).
 
 Команда разработки:
-- :white_check_mark: Auth/Users: [Илья Шунин (в роли Python-разработчика Тимлид - разработчик 1)](https://github.com/AvailableNow)
-- :white_check_mark: Titles/Category/Genre: [Евгений Иванов (в роли Python-разработчика - разработчик 2)](https://github.com/Iv-EN)
-- :white_check_mark: Reviews/Comments: [Кристина Скоринова (в роли Python-разработчика - разработчик 3)](https://github.com/Kristina-kul)
+- :white_check_mark: Auth/Users: [Илья Шунин](https://github.com/AvailableNow)
+- :white_check_mark: Titles/Category/Genre: [Евгений Иванов](https://github.com/Iv-EN)
+- :white_check_mark: Reviews/Comments: [Кристина Скоринова](https://github.com/Kristina-kul)
 
 Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
 
@@ -63,7 +63,6 @@ $ pip install -r requirements.txt
 
 6. Выполните миграции:
 ```
-$ python manage.py makemigrations
 $ python manage.py migrate
 ```
 
@@ -80,13 +79,13 @@ $ python manage.py runserver
 Запустите команду импорта:
 
 ```
-python manage.py load_csv_data
+python manage.py import_csv
 ```
 
 В терминале отобразится результат импорта.<br>
 Если какой-либо из файлов отсутствует, то он не будет импортирован.
 
-Примеры файлов csv для наполнения базы находятся в папке reviews/management/data/*.csv:
+Примеры файлов csv для наполнения базы находятся в папке /api_yamdb/static/data/*.csv:
 - users.csv - файл для заполнения таблицы пользователей
 - titles.csv - файл для заполнения таблицы произведений.
 - category.csv - файл для заполнения таблицы категорий произведений.

@@ -1,33 +1,18 @@
-import re
-
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
-from api_yamdb.settings import USERNAME_NAME, EMAIL
-from reviews.models import Category, Comment, Genre, Review, Title
-
-User = get_user_model()
-
-
-class ValidateUsernameMixin:
-    """Валидаторы для username."""
-
-    def validate_username(self, username):
-        pattern = re.compile(r'^[\w.@+-]+')
-
-        if pattern.fullmatch(username) is None:
-            match = re.split(pattern, username)
-            symbol = ''.join(match)
-            raise ValidationError(f'Некорректные символы в username: {symbol}')
-        if username == 'me':
-            raise ValidationError('Ник "me" нельзя регистрировать!')
-        return username
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import ValidateUsernameMixin
 
 
 class UserCreateSerializer(ValidateUsernameMixin, serializers.Serializer):
-    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
-    email = serializers.EmailField(required=True, max_length=EMAIL)
+    username = serializers.CharField(
+        required=True, max_length=settings.LEN_USERNAME_NAME
+    )
+    email = serializers.EmailField(
+        required=True, max_length=settings.LEN_EMAIL
+    )
 
 
 class UserSerializer(ValidateUsernameMixin, serializers.ModelSerializer):
@@ -49,7 +34,9 @@ class BaseUserSerializer(UserSerializer):
 
 
 class TokenSerializer(ValidateUsernameMixin, serializers.Serializer):
-    username = serializers.CharField(required=True, max_length=USERNAME_NAME)
+    username = serializers.CharField(
+        required=True, max_length=settings.LEN_USERNAME_NAME
+    )
     confirmation_code = serializers.CharField(required=True)
 
 
@@ -70,12 +57,12 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.context['request'].method != 'POST':
             return data
-        title_id = self.context['view'].kwargs.get('title_id')
-        author = self.context['request'].user
-        review = Review.objects.filter(
-            author=author, title=title_id
-        )
-        if review.exists():
+        if Review.objects.filter(
+            author=self.context['request'].user, 
+            title=get_object_or_404(
+                Title,
+                id=self.context['view'].kwargs.get('title_id'))
+            ).exists():
             raise serializers.ValidationError(
                 'Вы не можете добавить более'
                 'одного отзыва на произведение')
@@ -119,7 +106,7 @@ class TitlesReadOnlySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'description', 'rating', 'genre', 'category'
         )
-        read_only_fields = ['__all__']
+        read_only_fields = fields
 
 
 class TitleEditSerializer(serializers.ModelSerializer):

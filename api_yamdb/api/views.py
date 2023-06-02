@@ -1,18 +1,21 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models import Avg, Q
+from django.db.models import Avg
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import (
+    filters, mixins, permissions,
+    status, viewsets, serializers
+)
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import FilterTitle
 from .permissions import (
@@ -27,44 +30,29 @@ from .serializers import (
     UserSerializer, BaseUserSerializer,
 )
 
-User = get_user_model()
-
 
 @api_view(['POST'])
 def create_user(request):
-    """Функция регистрации user, генерации и отправки кода на почту"""
-
     serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
     username = serializer.validated_data.get('username')
     email = serializer.validated_data.get('email')
-
     try:
-        user = User.objects.get(Q(username=username) | Q(email=email))
-        if user.username == username and user.email == email:
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif user.username == username:
-            return Response(
-                {'error': 'Username уже занят.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        elif user.email == email:
-            return Response(
-                {'error': 'Email уже зарегистрирован.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    except User.DoesNotExist:
-        user = User.objects.create(username=username, email=email)
-    confirmation_code = default_token_generator.make_token(user)
-    send_mail(
-        subject='Регистрация в проекте YaMDb.',
-        message=f'Ваш код подтверждения: {confirmation_code}',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email]
-    )
-
-    return Response(serializer.data, status=status.HTTP_200_OK)
+        user, created = User.objects.get_or_create(username=username,
+                                                   email=email)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Регистрация в проекте YaMDb.',
+            message=f'Ваш код подтверждения: {confirmation_code}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email]
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except IntegrityError:
+        raise serializers.ValidationError(
+            'Данное имя пользователя или Email уже зарегистрированы',
+            code=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(['POST'])
@@ -96,7 +84,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get', 'patch'],
         detail=False,
-        url_path='me',
+        url_path=settings.FORBIDDEN_USERNAME,
         permission_classes=[IsAuthenticated],
         serializer_class=BaseUserSerializer,
     )
@@ -172,12 +160,11 @@ class GenreViewsSet(GenreCategoryMixinsBaseClass):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
-    ordering_fields = ('name',)
+    ordering = ['-rating']
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
