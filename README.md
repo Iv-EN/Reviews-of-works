@@ -79,7 +79,7 @@ $ python manage.py runserver
 Запустите команду импорта:
 
 ```
-python manage.py load_csv_data
+python manage.py import_csv
 ```
 
 В терминале отобразится результат импорта.<br>
