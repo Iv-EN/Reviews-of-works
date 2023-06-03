@@ -148,7 +148,7 @@ class TextAuthorPubDate(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор',
-        related_name='%(class)s'
+        related_name='%(class)ss'
     )
 
     def __str__(self):
@@ -157,6 +157,7 @@ class TextAuthorPubDate(models.Model):
     class Meta:
         abstract = True
         ordering = ('-pub_date',)
+        default_related_name = 'reviews'
 
 
 class Review(TextAuthorPubDate):
@@ -174,10 +175,9 @@ class Review(TextAuthorPubDate):
         verbose_name='Оценка',
     )
 
-    class Meta:
+    class Meta(TextAuthorPubDate.Meta):
         verbose_name = 'Ревью'
         verbose_name_plural = 'Ревью'
-        default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
@@ -193,7 +193,7 @@ class Comment(TextAuthorPubDate):
         verbose_name='Ревью'
     )
 
-    class Meta:
+    class Meta(TextAuthorPubDate.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
