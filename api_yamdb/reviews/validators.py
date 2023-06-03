@@ -14,17 +14,15 @@ def validate_year(value):
     return value
 
 
-class ValidateUsernameMixin:
-    """Валидаторы для username."""
-
-    def validate_username(self, username):
-        pattern = r'^[\w.@+-]+'
-        if not re.fullmatch(pattern, username):
-            raise ValidationError(
-                f'Некорректные символы в username: {username}'
-            )
-        if username == settings.FORBIDDEN_USERNAME:
-            raise ValidationError(
-                f'Ник "{settings.FORBIDDEN_USERNAME}" нельзя регистрировать!'
-            )
-        return username
+def validate_username(username):
+    pattern = r'^[\w.@+-]+'
+    if not re.fullmatch(pattern, username):
+        invalid_chars = ''.join(set(re.findall(pattern, username)))
+        raise ValidationError(
+            f'Некорректные символы в username: {invalid_chars}'
+        )
+    if username == settings.FORBIDDEN_USERNAME:
+        raise ValidationError(
+            f'Ник "{settings.FORBIDDEN_USERNAME}" нельзя регистрировать!'
+        )
+    return username
