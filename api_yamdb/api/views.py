@@ -7,12 +7,12 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     filters, mixins, permissions,
-    status, viewsets, serializers
+    status, viewsets
 )
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
@@ -32,27 +32,35 @@ from .serializers import (
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def create_user(request):
     serializer = UserCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data.get('username')
-    email = serializer.validated_data.get('email')
     try:
-        user, created = User.objects.get_or_create(username=username,
-                                                   email=email)
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            subject='Регистрация в проекте YaMDb.',
-            message=f'Ваш код подтверждения: {confirmation_code}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email]
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+    except IntegrityError as error:
+        try:
+            key = str(error).split('.')[1].split("'")[1]
+        except IndexError:
+            key = None
+        if key == 'username':
+            message = {'username': 'Имя пользователя уже зарегистрировано'}
+        elif key == 'email':
+            message = {'email': 'Email уже зарегистрирован'}
+        else:
+            message = {'non_field_errors': 'Что-то пошло не так...'}
+        return Response(
+            message,
+            status=status.HTTP_400_BAD_REQUEST
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except IntegrityError:
-        raise serializers.ValidationError(
-            'Данное имя пользователя или Email уже зарегистрированы',
-            code=status.HTTP_400_BAD_REQUEST
-        )
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        subject='Регистрация в проекте YaMDb.',
+        message=f'Ваш код подтверждения: {confirmation_code}',
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email]
+    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -164,7 +172,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
-    ordering = ['-rating']
+    ordering = ('-rating', 'name',)
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):

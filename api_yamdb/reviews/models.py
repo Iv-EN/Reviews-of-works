@@ -5,7 +5,7 @@ from django.core.validators import (
 )
 from django.db import models
 
-from reviews.validators import validate_year, ValidateUsernameMixin
+from reviews.validators import validate_year, validate_username
 
 
 USER = 'user'
@@ -25,7 +25,7 @@ class User(AbstractUser):
         max_length=settings.LEN_USERNAME_NAME,
         unique=True,
         verbose_name='Имя пользователя',
-        validators=[ValidateUsernameMixin().validate_username]
+        validators=[validate_username]
     )
 
     first_name = models.CharField(
@@ -75,13 +75,13 @@ class GenreCategoryBaseClass(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='URL-адрес',
+        verbose_name='Ссылка',
         unique=True
     )
 
     class Meta:
         abstract = True
-        ordering = ('id',)
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:30]
@@ -129,7 +129,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
