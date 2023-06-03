@@ -5,7 +5,7 @@ from django.core.validators import (
 )
 from django.db import models
 
-from reviews.validators import validate_year, ValidateUsernameMixin
+from reviews.validators import validate_year, validate_username
 
 
 USER = 'user'
@@ -25,7 +25,7 @@ class User(AbstractUser):
         max_length=settings.LEN_USERNAME_NAME,
         unique=True,
         verbose_name='Имя пользователя',
-        validators=[ValidateUsernameMixin().validate_username]
+        validators=[validate_username]
     )
 
     first_name = models.CharField(
