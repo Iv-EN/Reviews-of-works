@@ -75,7 +75,7 @@ class GenreCategoryBaseClass(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='Ссылка',
+        verbose_name='Путь (имя каталога)',
         unique=True
     )
 
@@ -157,7 +157,7 @@ class TextAuthorPubDate(models.Model):
     class Meta:
         abstract = True
         ordering = ('-pub_date',)
-        default_related_name = 'reviews'
+        default_related_name = '%(class)ss'
 
 
 class Review(TextAuthorPubDate):
@@ -196,4 +196,3 @@ class Comment(TextAuthorPubDate):
     class Meta(TextAuthorPubDate.Meta):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        default_related_name = 'comments'
