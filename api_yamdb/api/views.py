@@ -39,13 +39,9 @@ def create_user(request):
     try:
         user, _ = User.objects.get_or_create(**serializer.validated_data)
     except IntegrityError as error:
-        try:
-            key = str(error).split('.')[1].split("'")[1]
-        except IndexError:
-            key = None
-        if key == 'username':
+        if 'username' in str(error.args):
             message = {'username': 'Имя пользователя уже зарегистрировано'}
-        elif key == 'email':
+        elif 'email' in str(error.args):
             message = {'email': 'Email уже зарегистрирован'}
         else:
             message = {'non_field_errors': 'Что-то пошло не так...'}
