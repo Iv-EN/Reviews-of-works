@@ -19,14 +19,6 @@ class UserCreateSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=True,
-        max_length=settings.LEN_USERNAME_NAME,
-        validators=[
-            validate_username,
-            UniqueValidator(queryset=User.objects.all())
-        ]
-    )
 
     class Meta:
         model = User
@@ -39,6 +31,11 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
+    def validate(self, data):
+        username = data.get('username')
+        if username:
+            validate_username(username)
+        return data
 
 class BaseUserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
