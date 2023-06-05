@@ -2,7 +2,6 @@ from django.conf import settings
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 
-from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
 
@@ -36,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         if username:
             validate_username(username)
         return data
+
 
 class BaseUserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
