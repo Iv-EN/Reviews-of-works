@@ -15,9 +15,11 @@ def validate_year(value):
 
 
 def validate_username(username):
-    pattern = r'^[\w.@+-]+'
+    pattern = r'^[\w.@+-]+$'
     if not re.fullmatch(pattern, username):
-        invalid_chars = ''.join(set(re.findall(pattern, username)))
+        invalid_chars = ''.join(sorted(
+            set(username) - set(re.findall(pattern, username))
+        ))
         raise ValidationError(
             f'Некорректные символы в username: {invalid_chars}'
         )

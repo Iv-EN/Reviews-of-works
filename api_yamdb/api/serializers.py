@@ -2,7 +2,6 @@ from django.conf import settings
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 
-from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
 
@@ -19,14 +18,6 @@ class UserCreateSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=True,
-        max_length=settings.LEN_USERNAME_NAME,
-        validators=[
-            validate_username,
-            UniqueValidator(queryset=User.objects.all())
-        ]
-    )
 
     class Meta:
         model = User
@@ -38,6 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role'
         )
+
+    def validate(self, data):
+        username = data.get('username')
+        if username:
+            validate_username(username)
+        return data
 
 
 class BaseUserSerializer(UserSerializer):
