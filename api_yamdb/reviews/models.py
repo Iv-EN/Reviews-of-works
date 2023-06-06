@@ -75,7 +75,7 @@ class GenreCategoryBaseClass(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        verbose_name='Путь (имя каталога)',
+        verbose_name='Идентификатор',
         unique=True
     )
 
