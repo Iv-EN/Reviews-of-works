@@ -169,8 +169,8 @@ class Review(TextAuthorPubDate):
     score = models.SmallIntegerField(
         default=1,
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10),
+            MinValueValidator(settings.MIN_SCORE_VALUE),
+            MaxValueValidator(settings.MAX_SCORE_VALUE)
         ],
         verbose_name='Оценка',
     )
