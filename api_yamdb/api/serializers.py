@@ -1,6 +1,9 @@
+import re
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
@@ -30,10 +33,26 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
+    def validate_username(self, username):
+        PATTERN = re.compile(r'[\w.@+-]+')
+        matches = PATTERN.fullmatch(username)
+        invalid_chars = PATTERN.sub('', username)
+        if matches is None:
+            raise ValidationError(
+                f'Некорректные символы в username: {invalid_chars}'
+            )
+        elif username == settings.FORBIDDEN_USERNAME:
+            raise ValidationError(
+                f'Username "{settings.FORBIDDEN_USERNAME}"'
+                f'нельзя регистрировать!'
+            )
+        return username
+
     def validate(self, data):
+        data = super().validate(data)
         username = data.get('username')
         if username:
-            validate_username(username)
+            self.validate_username(username)
         return data
 
 

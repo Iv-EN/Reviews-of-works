@@ -38,13 +38,23 @@ def create_user(request):
     serializer.is_valid(raise_exception=True)
     try:
         user, _ = User.objects.get_or_create(**serializer.validated_data)
-    except IntegrityError as error:
-        if 'username' in str(error.args):
-            message = {'username': 'Имя пользователя уже зарегистрировано'}
-        elif 'email' in str(error.args):
-            message = {'email': 'Email уже зарегистрирован'}
-        else:
-            message = {'non_field_errors': 'Что-то пошло не так...'}
+    except IntegrityError:
+        message = {}
+
+        try:
+            User.objects.get(username=request.data['username'])
+            message['username'] = 'Имя пользователя уже зарегистрировано'
+        except User.DoesNotExist:
+            pass
+
+        try:
+            User.objects.get(email=request.data['email'])
+            message['email'] = 'Email уже зарегистрирован'
+        except User.DoesNotExist:
+            pass
+
+        if not message:
+            message['non_field_errors'] = 'Что-то пошло не так...'
         return Response(
             message,
             status=status.HTTP_400_BAD_REQUEST
