@@ -39,26 +39,12 @@ def create_user(request):
     try:
         user, _ = User.objects.get_or_create(**serializer.validated_data)
     except IntegrityError:
-        message = {}
-
-        try:
-            User.objects.get(username=request.data['username'])
-            message['username'] = 'Имя пользователя уже зарегистрировано'
-        except User.DoesNotExist:
-            pass
-
-        try:
-            User.objects.get(email=request.data['email'])
-            message['email'] = 'Email уже зарегистрирован'
-        except User.DoesNotExist:
-            pass
-
-        if not message:
-            message['non_field_errors'] = 'Что-то пошло не так...'
-        return Response(
-            message,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        if User.objects.filter(email=request.data['email']).exists():
+            return Response({'email': 'Email уже зарегистрирован'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'username': 'username уже зарегистрирован'},
+                            status=status.HTTP_400_BAD_REQUEST)
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject='Регистрация в проекте YaMDb.',
