@@ -33,27 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def validate_username(self, username):
-        PATTERN = re.compile(r'[\w.@+-]+')
-        matches = PATTERN.fullmatch(username)
-        invalid_chars = PATTERN.sub('', username)
-        if matches is None:
-            raise ValidationError(
-                f'Некорректные символы в username: {invalid_chars}'
-            )
-        elif username == settings.FORBIDDEN_USERNAME:
-            raise ValidationError(
-                f'Username "{settings.FORBIDDEN_USERNAME}"'
-                f'нельзя регистрировать!'
-            )
-        return username
-
-    def validate(self, data):
-        data = super().validate(data)
-        username = data.get('username')
-        if username:
-            self.validate_username(username)
-        return data
+    def validate_username(self, value):
+        return validate_username(value)
 
 
 class BaseUserSerializer(UserSerializer):

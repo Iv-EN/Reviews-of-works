@@ -15,15 +15,15 @@ def validate_year(value):
 
 
 def validate_username(username):
-    PATTERN = re.compile(r'[\w.@+-]+')
-    matches = PATTERN.fullmatch(username)
-    invalid_chars = PATTERN.sub('', username)
-    if matches is None:
+    pattern = re.compile(r'[\w.@+-]+')
+    invalid_chars = pattern.sub('', username)
+    if invalid_chars:
         raise ValidationError(
             f'Некорректные символы в username: {invalid_chars}'
         )
-    elif username == settings.FORBIDDEN_USERNAME:
+    if username == settings.FORBIDDEN_USERNAME:
         raise ValidationError(
-            f'Username "{settings.FORBIDDEN_USERNAME}" нельзя регистрировать!'
+            f'Username "{settings.FORBIDDEN_USERNAME}"'
+            f' нельзя регистрировать!'
         )
     return username
