@@ -35,7 +35,7 @@
 
 2. В комнадной строке клонируйте этот репозиторий на компьютер:
 ```
-$ git clone git@github.com:AvailableNow/api_yamdb.git
+$ git clone https://github.com/Iv-EN/Reviews-of-works.git
 ```
 
 3. Перейдите в папку api_yamdb
